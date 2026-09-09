@@ -12,16 +12,19 @@
                     <h1>Arsip Tugas Akhir</h1>
                     <p class="intro-copy">Telusuri arsip TA berdasarkan program studi dan tahun. Perguruan tinggi dapat berasal dari dalam maupun luar ITK.</p>
                 </div>
-                <button type="button" class="primary-button" data-thesis-form-toggle>
-                    <x-icon name="file-text" :size="16" /> Tambah Arsip TA
-                </button>
+                @auth
+                    <button type="button" class="primary-button" data-thesis-form-toggle>
+                        <x-icon name="file-text" :size="16" /> Tambah Arsip TA
+                    </button>
+                @endauth
             </section>
 
             @if (session('status'))
                 <div class="alert alert-success">{{ session('status') }}</div>
             @endif
 
-            {{-- ===== Form tambah arsip TA ===== --}}
+            {{-- ===== Form tambah arsip TA (hanya untuk user yang login) ===== --}}
+            @auth
             <section class="thesis-form-wrap" data-thesis-form @if (! $errors->any()) hidden @endif>
                 <form class="thesis-form" method="POST" action="{{ route('knowledge-base.archive.store') }}" enctype="multipart/form-data">
                     @csrf
@@ -78,6 +81,7 @@
                     </div>
                 </form>
             </section>
+            @endauth
 
             {{-- ===== Filter ===== --}}
             <form class="filter-bar" method="GET" action="{{ route('knowledge-base.archive') }}">
