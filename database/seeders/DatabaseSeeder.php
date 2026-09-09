@@ -15,11 +15,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Administrator',
+            'email' => 'admin@kbase.test',
+            'password' => 'password',
+            'is_admin' => true,
+        ]);
+
+        $this->call([
+            KnowledgeBaseSeeder::class,
+            SopSeeder::class,
         ]);
     }
 }
