@@ -94,8 +94,8 @@ img, svg { max-width: 100%; }
 .landing-nav { height: 64px; background: #fff; border-bottom: 1px solid #e5e9f0; position: sticky; top: 0; z-index: 50; }
 .landing-nav-inner { height: 100%; max-width: 1120px; padding: 0 32px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
 .landing-nav-links { display: flex; align-items: center; gap: 28px; }
-.landing-nav-links button { border: 0; background: transparent; color: #526073; font-size: 13px; padding: 0; }
-.landing-nav-links button:hover { color: var(--brand); }
+.landing-nav-links button:not(.nav-dropdown-trigger) { border: 0; background: transparent; color: #526073; font-size: 13px; padding: 0; }
+.landing-nav-links button:not(.nav-dropdown-trigger):hover { color: var(--brand); }
 .landing-nav-cta { display: inline-flex; align-items: center; gap: 6px; color: #fff !important; background: var(--brand); border-radius: 7px; padding: 8px 14px !important; font-weight: 650; }
 .landing-nav-cta:hover { background: var(--brand-hover); color: #fff !important; }
 
@@ -156,7 +156,7 @@ img, svg { max-width: 100%; }
 .footer-copy { color: #aab3be; font-size: 11px; margin-left: auto; }
 
 @media (max-width: 900px) {
-  .landing-nav-links button:not(.landing-nav-cta) { display: none; }
+  .landing-nav-links button:not(.landing-nav-cta):not(.nav-dropdown-trigger) { display: none; }
   .landing-stats { grid-template-columns: repeat(2, 1fr); }
   .landing-team-grid { grid-template-columns: 1fr; }
   .feature-grid { grid-template-columns: repeat(2, 1fr); }
@@ -570,4 +570,482 @@ a.brand-mark { text-decoration: none; color: inherit; }
   .sop-grid-2 { grid-template-columns: 1fr; }
   .sop-toolbar { width: 100%; }
   .repeat-row { flex-direction: column; align-items: stretch; }
+}
+
+/* ===============================================================
+   Nav end (auth actions) — always visible on all screen sizes
+   =============================================================== */
+
+.landing-nav-inner { gap: 16px; }
+
+.nav-end {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.nav-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #526073;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Ensure the login CTA is always visible regardless of screen size */
+.nav-end .landing-nav-cta {
+    flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+    /* Keep nav-user hidden on very small screens to save space, keep CTA */
+    .nav-user { display: none; }
+    .nav-logout-btn { font-size: 11px; padding: 6px 10px; }
+}
+
+@media (max-width: 480px) {
+    .landing-nav-cta span { display: none; } /* hide text "Cari" in search trigger */
+}
+
+/* ===============================================================
+   Section kontak WhatsApp (above footer)
+   =============================================================== */
+
+.contact-section {
+    background: var(--primary-900);
+    padding: 48px 32px;
+}
+
+.contact-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    flex-wrap: wrap;
+}
+
+.contact-text h2 {
+    color: #fff;
+    font-size: 20px;
+    letter-spacing: -.02em;
+    margin-bottom: 8px;
+}
+
+.contact-text p {
+    color: var(--primary-200);
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 520px;
+    margin: 0;
+}
+
+.contact-wa-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #25d366;
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 13px 22px;
+    border-radius: 9px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background .15s, transform .15s;
+}
+
+.contact-wa-btn:hover {
+    background: #1ebe5a;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+    .contact-section { padding: 36px 20px; }
+    .contact-inner { flex-direction: column; text-align: center; }
+    .contact-wa-btn { align-self: center; }
+}
+
+/* ===============================================================
+   Admin user management — badge role
+   =============================================================== */
+
+.badge-role {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    color: #526073;
+    background: #edf0f4;
+    text-transform: capitalize;
+}
+
+.badge-role.admin {
+    color: var(--primary-800);
+    background: var(--primary-100);
+}
+
+/* ===============================================================
+   Nav dropdown "Kelola Data" (admin only)
+   =============================================================== */
+
+.nav-dropdown {
+    position: relative;
+}
+
+.nav-dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    border-radius: 8px;
+    padding: 7px 14px 7px 12px;   /* lebih lebar kanan supaya ada napas sebelum chevron */
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+    /* success-500 @ 50% opacity — tampil di kondisi apapun */
+    background: rgba(35, 199, 76, 0.5) !important;
+    color: #0a4a1a !important;
+    transition: background .15s, box-shadow .15s;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.nav-dropdown-trigger:hover,
+.nav-dropdown.is-open .nav-dropdown-trigger {
+    background: rgba(35, 199, 76, 0.72) !important;
+    box-shadow: 0 2px 8px rgba(35, 199, 76, .25);
+}
+
+/* Active state when on sop.* or admin.* routes */
+.nav-dropdown.is-active .nav-dropdown-trigger {
+    background: rgba(35, 199, 76, 0.72) !important;
+    color: #073b15 !important;
+}
+
+.nav-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 180px;
+    background: #fff;
+    border: 1px solid #e2e7ee;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(20, 40, 60, .12);
+    z-index: 55;
+    overflow: hidden;
+    padding: 4px;
+}
+
+.nav-dropdown.is-open .nav-dropdown-menu {
+    display: block;
+}
+
+.nav-dropdown-menu a {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 12px;
+    border-radius: 7px;
+    text-decoration: none;
+    color: #48566b;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.nav-dropdown-menu a:hover {
+    background: var(--success-50);
+    color: var(--success-700);
+}
+
+.nav-dropdown-menu a.is-active {
+    background: var(--success-50);
+    color: var(--success-700);
+    font-weight: 650;
+}
+
+/* Close dropdown on mobile when nav is hidden */
+@media (max-width: 900px) {
+    .nav-dropdown-menu {
+        left: auto;
+        right: 0;
+    }
+}
+
+/* ===============================================================
+   Impersonate banner
+   =============================================================== */
+
+.impersonate-bar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: var(--warning-500);
+    color: #3b1f00;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px 20px;
+}
+
+.impersonate-bar strong {
+    font-weight: 750;
+}
+
+.impersonate-stop-btn {
+    border: 2px solid #3b1f00;
+    background: transparent;
+    color: #3b1f00;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+
+.impersonate-stop-btn:hover {
+    background: #3b1f00;
+    color: var(--warning-200);
+}
+
+/* When banner shows, push the sticky nav down */
+.impersonate-bar + header.landing-nav {
+    top: 42px;
+}
+
+/* ===============================================================
+   Nav profile dropdown
+   =============================================================== */
+
+.nav-profile-dropdown {
+    position: relative;
+}
+
+.nav-profile-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid #dce2ea;
+    background: #fff;
+    border-radius: 9px;
+    padding: 5px 10px 5px 5px;
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s;
+    font-size: 13px;
+    color: #334057;
+    font-weight: 600;
+}
+
+.nav-profile-trigger:hover,
+.nav-profile-dropdown.is-open .nav-profile-trigger {
+    border-color: var(--brand-border);
+    box-shadow: 0 2px 8px rgba(31, 107, 196, .1);
+}
+
+.nav-profile-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--brand-soft-2);
+    color: var(--brand);
+    font-size: 11px;
+    font-weight: 750;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.nav-profile-name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-profile-menu {
+    min-width: 220px;
+    right: 0;
+    left: auto;
+}
+
+.nav-profile-info {
+    padding: 12px 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-profile-info strong {
+    font-size: 13px;
+    color: #273349;
+}
+
+.nav-profile-info span {
+    font-size: 11px;
+    color: #8791a0;
+}
+
+.nav-profile-divider {
+    height: 1px;
+    background: #edf0f4;
+    margin: 3px 0;
+}
+
+.nav-profile-logout,
+.nav-profile-stop-btn {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+}
+
+.nav-profile-logout {
+    color: var(--danger-700);
+}
+
+.nav-profile-logout:hover {
+    background: var(--danger-50);
+}
+
+.nav-profile-stop-btn {
+    color: var(--warning-800);
+}
+
+.nav-profile-stop-btn:hover {
+    background: var(--warning-50);
+}
+
+/* ===============================================================
+   Profile page
+   =============================================================== */
+
+.profile-card {
+    background: #fff;
+    border: 1px solid #e2e7ee;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.profile-card-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.profile-avatar-lg {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--brand-soft-2);
+    color: var(--brand);
+    font-size: 22px;
+    font-weight: 750;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.profile-card-head strong {
+    display: block;
+    font-size: 16px;
+    color: #273349;
+}
+
+.profile-card-head span {
+    display: block;
+    font-size: 12px;
+    color: #8791a0;
+    margin-top: 2px;
+}
+
+.profile-form {
+    background: #fff;
+    border: 1px solid #e2e7ee;
+    border-radius: 12px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.profile-form h2 {
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.profile-signature-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.profile-signature-img {
+    max-height: 72px;
+    max-width: 220px;
+    border: 1px solid #e2e7ee;
+    border-radius: 8px;
+    background: #f7f9fc;
+    padding: 6px;
+}
+
+.profile-signature-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.profile-signature-empty {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #9aa3b0;
+    font-size: 12px;
+    padding: 12px;
+    border: 1px dashed #d9e0e9;
+    border-radius: 8px;
+    background: #fbfcfe;
+}
+
+/* hide file input visually but keep it accessible */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 600px) {
+    .nav-profile-name { display: none; }
+    .profile-card-head { flex-direction: column; text-align: center; }
+    .profile-signature-wrap { flex-direction: column; align-items: flex-start; }
 }

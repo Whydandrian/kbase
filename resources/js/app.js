@@ -100,6 +100,10 @@ document.addEventListener('DOMContentLoaded', () => {
             closeSearch();
             closeModal();
             closeNav();
+            app.querySelectorAll('.nav-dropdown.is-open').forEach((d) => {
+                d.classList.remove('is-open');
+                d.querySelector('[data-dropdown-toggle]')?.setAttribute('aria-expanded', 'false');
+            });
         }
     });
 
@@ -348,6 +352,34 @@ document.addEventListener('DOMContentLoaded', () => {
         openDocForm();
     }
 
+    /* ---------- Nav dropdown toggle ---------- */
+    app.querySelectorAll('[data-dropdown-toggle]').forEach((trigger) => {
+        const dropdown = trigger.closest('.nav-dropdown');
+        if (!dropdown) {
+            return;
+        }
+
+        trigger.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isOpen = dropdown.classList.contains('is-open');
+            // Close all others first.
+            app.querySelectorAll('.nav-dropdown.is-open').forEach((d) => d.classList.remove('is-open'));
+            if (!isOpen) {
+                dropdown.classList.add('is-open');
+                trigger.setAttribute('aria-expanded', 'true');
+            } else {
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+        });
+    });
+
+    document.addEventListener('click', () => {
+        app.querySelectorAll('.nav-dropdown.is-open').forEach((d) => {
+            d.classList.remove('is-open');
+            d.querySelector('[data-dropdown-toggle]')?.setAttribute('aria-expanded', 'false');
+        });
+    });
+
     /* ---------- Archive: thesis form toggle ---------- */
     const thesisForm = app.querySelector('[data-thesis-form]');
     app.querySelectorAll('[data-thesis-form-toggle]').forEach((el) => {
@@ -356,6 +388,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 thesisForm.hidden = !thesisForm.hidden;
                 if (!thesisForm.hidden) {
                     thesisForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        });
+    });
+
+    /* ---------- Admin: user form toggle ---------- */
+    const userForm = app.querySelector('[data-user-form]');
+    app.querySelectorAll('[data-user-form-toggle]').forEach((el) => {
+        el.addEventListener('click', () => {
+            if (userForm) {
+                userForm.hidden = !userForm.hidden;
+                if (!userForm.hidden) {
+                    userForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             }
         });
