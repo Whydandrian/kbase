@@ -6,13 +6,17 @@ use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
+/**
+ * Seeder untuk lingkungan DEVELOPMENT & testing.
+ * Mengisi data mock (factory, fake docs, 24 theses, dll).
+ *
+ * Untuk PRODUCTION gunakan:
+ *   php artisan db:seed --class=ProductionSeeder
+ */
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
         User::factory()->create([
