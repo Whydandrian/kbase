@@ -5,88 +5,19 @@ namespace Database\Seeders;
 use App\Models\Document;
 use App\Models\Sop;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class SopSeeder extends Seeder
 {
-    private const SOP_DIRECTORY = 'tata_kelola_ti/dokumen_sop';
-
-    private const ACRONYMS = ['SOP', 'VPS', 'TIK', 'TI', 'ITK', 'UPT'];
-
-    public function run(): void
-    {
-        // 1) Satu SOP lengkap (data nyata) sebagai contoh terisi penuh.
-        $this->seedDetailedSop();
-
-        // 2) SOP terstruktur untuk SEMUA file PDF di storage private dokumen_sop.
-        $this->seedSopsFromFiles();
-    }
-
     /**
-     * Buat satu entri SOP terstruktur untuk setiap berkas PDF pada
-     * storage/app/private/tata_kelola_ti/dokumen_sop.
+     * Seed SATU SOP terstruktur lengkap ("Penyusunan Program Kerja") sebagai
+     * contoh pengisian SOP via form input.
      *
-     * Tiap SOP dibuat dengan identitas dasar + 3 baris pengesahan kosong,
-     * tertaut ke dokumen PDF-nya, dan siap dilengkapi lewat form edit.
+     * Catatan: file SOP yang sudah jadi TIDAK di-seed ke tabel sops. File-file
+     * tersebut ditampilkan sebagai dokumen PDF di menu domain (Tata Kelola TI >
+     * Dokumen SOP) melalui KnowledgeBaseSeeder. Tabel sops hanya untuk SOP yang
+     * dibuat/diupload oleh user melalui menu SOP.
      */
-    private function seedSopsFromFiles(): void
-    {
-        $disk = Storage::disk('local');
-
-        if (! $disk->exists(self::SOP_DIRECTORY)) {
-            $this->command?->warn('Direktori SOP tidak ditemukan: '.self::SOP_DIRECTORY);
-
-            return;
-        }
-
-        $count = 0;
-
-        foreach ($disk->files(self::SOP_DIRECTORY) as $path) {
-            if (! Str::endsWith(Str::lower($path), '.pdf')) {
-                continue;
-            }
-
-            // "(01) SOP PENYUSUNAN PROGRAM KERJA.pdf" -> "Penyusunan Program Kerja"
-            $rawName = pathinfo($path, PATHINFO_FILENAME);
-            $number = $this->extractNumber($rawName);
-            $namaSop = $this->deriveName($rawName);
-
-            // SOP contoh yang sudah lengkap di-skip agar tidak tertimpa.
-            if (Str::lower($namaSop) === 'penyusunan program kerja') {
-                continue;
-            }
-
-            $document = Document::query()
-                ->where('slug', Str::slug('SOP '.$namaSop))
-                ->first();
-
-            $sop = Sop::updateOrCreate(
-                ['nomor_sop' => $this->placeholderNumber($number)],
-                [
-                    'document_id' => $document?->id,
-                    'nama_sop' => $namaSop,
-                    'unit_pembuat' => 'UPT Teknologi Informasi dan Komunikasi',
-                    'kementerian' => 'Kementerian Riset, Teknologi dan Pendidikan Tinggi',
-                    'institusi' => 'Institut Teknologi Kalimantan',
-                    'status' => 'draft',
-                ],
-            );
-
-            // Isi baris pengesahan default hanya jika belum ada.
-            if ($sop->approvals()->count() === 0) {
-                foreach ($this->defaultApprovals() as $approval) {
-                    $sop->approvals()->create($approval);
-                }
-            }
-
-            $count++;
-        }
-
-        $this->command?->info("✓ {$count} SOP terstruktur dibuat dari berkas PDF.");
-    }
-
-    private function seedDetailedSop(): void
+    public function run(): void
     {
         $document = Document::query()->where('slug', 'sop-penyusunan-program-kerja')->first();
 
@@ -120,74 +51,6 @@ class SopSeeder extends Seeder
         foreach ($this->flowSteps() as $order => $step) {
             $sop->flowSteps()->create($step + ['sort_order' => $order]);
         }
-    }
-
-    /**
-     * Ambil nomor urut dari nama berkas "(NN) SOP ...".
-     */
-    private function extractNumber(string $rawName): ?string
-    {
-        if (preg_match('/^\((\d+)\)/', $rawName, $m)) {
-            return $m[1];
-        }
-
-        return null;
-    }
-
-    /**
-     * "(03) SOP PEMBUATAN EMAIL" -> "Pembuatan Email"
-     */
-    private function deriveName(string $rawName): string
-    {
-        // Buang prefiks "(NN)".
-        $name = preg_replace('/^\(\d+\)\s*/', '', $rawName);
-        // Buang kata "SOP" di depan.
-        $name = preg_replace('/^SOP\s+/i', '', trim($name));
-
-        return $this->titleCasePreservingAcronyms(trim($name));
-    }
-
-    /**
-     * Nomor SOP sementara (placeholder) — dilengkapi manual lewat form.
-     */
-    private function placeholderNumber(?string $number): string
-    {
-        $seq = str_pad($number ?? '0', 3, '0', STR_PAD_LEFT);
-
-        return "SOP-{$seq}/IT10.IV/OT.07/DRAFT";
-    }
-
-    /**
-     * Baris pengesahan default (kosong, belum ditandatangani).
-     *
-     * @return list<array<string, mixed>>
-     */
-    private function defaultApprovals(): array
-    {
-        return [
-            ['role' => 'penyusun', 'nama' => null, 'jabatan' => null, 'tanggal' => null, 'is_signed' => false],
-            ['role' => 'pemeriksa', 'nama' => null, 'jabatan' => null, 'tanggal' => null, 'is_signed' => false],
-            ['role' => 'pengesahan', 'nama' => null, 'jabatan' => null, 'tanggal' => null, 'is_signed' => false],
-        ];
-    }
-
-    /**
-     * Title-case dengan mempertahankan akronim tertentu.
-     */
-    private function titleCasePreservingAcronyms(string $value): string
-    {
-        $words = array_map(function (string $word): string {
-            $bare = trim($word, ',');
-            $suffix = str_ends_with($word, ',') ? ',' : '';
-
-            if (in_array(Str::upper($bare), self::ACRONYMS, true)) {
-                return Str::upper($bare).$suffix;
-            }
-
-            return Str::title(Str::lower($bare)).$suffix;
-        }, explode(' ', $value));
-
-        return implode(' ', $words);
     }
 
     /**
