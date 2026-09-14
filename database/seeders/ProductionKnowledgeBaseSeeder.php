@@ -3,18 +3,24 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use App\Models\Document;
 use App\Models\Domain;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Seed domain dan kategori untuk lingkungan production.
- * Tidak membuat dokumen — konten diisi manual oleh petugas setelah deploy.
+ * Seed domain dan kategori untuk lingkungan production, termasuk dokumen SOP
+ * yang sudah jadi (file PDF pada storage/app/private/tata_kelola_ti/dokumen_sop).
  *
  * Dijalankan via: php artisan db:seed --class=ProductionSeeder
  */
 class ProductionKnowledgeBaseSeeder extends Seeder
 {
+    private const SOP_DIRECTORY = 'tata_kelola_ti/dokumen_sop';
+
+    private const ACRONYMS = ['SOP', 'VPS', 'TIK', 'TI', 'ITK', 'UPT', 'SPBE'];
+
     public function run(): void
     {
         $created = 0;
@@ -37,7 +43,7 @@ class ProductionKnowledgeBaseSeeder extends Seeder
                 $slug = Str::slug($domain->slug.'-'.$cat['name']);
                 $existing = Category::where('slug', $slug)->exists();
 
-                Category::updateOrCreate(
+                $category = Category::updateOrCreate(
                     ['slug' => $slug],
                     [
                         'domain_id' => $domain->id,
@@ -49,10 +55,81 @@ class ProductionKnowledgeBaseSeeder extends Seeder
                 );
 
                 $existing ? $skipped++ : $created++;
+
+                // Kategori "Dokumen SOP" diisi dengan file PDF SOP yang sudah jadi.
+                if ($category->slug === 'tata-kelola-ti-dokumen-sop') {
+                    $this->seedSopDocuments($category);
+                }
             }
         }
 
         $this->command->info("✓ Domains & categories seeded ({$created} baru, {$skipped} sudah ada).");
+    }
+
+    /**
+     * Buat record dokumen untuk setiap berkas PDF SOP pada disk privat.
+     * Idempotent (updateOrCreate by slug) dan aman dijalankan ulang.
+     */
+    private function seedSopDocuments(Category $category): void
+    {
+        $disk = Storage::disk('local');
+
+        if (! $disk->exists(self::SOP_DIRECTORY)) {
+            $this->command->warn('  ⚠ Folder SOP tidak ditemukan di server: '.self::SOP_DIRECTORY);
+
+            return;
+        }
+
+        $count = 0;
+
+        foreach ($disk->files(self::SOP_DIRECTORY) as $path) {
+            if (! Str::endsWith(Str::lower($path), '.pdf')) {
+                continue;
+            }
+
+            // "(01) SOP PENYUSUNAN PROGRAM KERJA.pdf" -> "SOP Penyusunan Program Kerja"
+            $name = pathinfo($path, PATHINFO_FILENAME);
+            $name = trim(preg_replace('/^\(\d+\)\s*/', '', $name));
+            $title = $this->titleCasePreservingAcronyms($name);
+
+            Document::updateOrCreate(
+                ['slug' => Str::slug($name)],
+                [
+                    'category_id' => $category->id,
+                    'title' => $title,
+                    'description' => 'Standar Operasional Prosedur: '.$title.'.',
+                    'doc_category' => 'SOP',
+                    'owner' => 'UPT TIK',
+                    'icon' => 'file-text',
+                    'url' => null,
+                    'file_path' => $path,
+                    'is_active' => true,
+                ],
+            );
+
+            $count++;
+        }
+
+        $this->command->info("  ✓ {$count} dokumen SOP (PDF) di-seed.");
+    }
+
+    /**
+     * Title-case dengan mempertahankan akronim tertentu (SOP, VPS, TIK, dll).
+     */
+    private function titleCasePreservingAcronyms(string $value): string
+    {
+        $words = array_map(function (string $word): string {
+            $bare = trim($word, ',');
+            $suffix = str_ends_with($word, ',') ? ',' : '';
+
+            if (in_array(Str::upper($bare), self::ACRONYMS, true)) {
+                return Str::upper($bare).$suffix;
+            }
+
+            return Str::title(Str::lower($bare)).$suffix;
+        }, explode(' ', $value));
+
+        return implode(' ', $words);
     }
 
     /**
